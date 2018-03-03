@@ -12,7 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ShellProgressBar" Version="4.0.0" />
+    <PackageReference Include="kurukuru" Version="1.0.0" />
   </ItemGroup>
 
+  
 </Project>

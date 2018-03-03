@@ -5,22 +5,30 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using ShellProgressBar;
+using Kurukuru;
 
 namespace get_azure
 {
     class Program
     {
-        public static async Task<int> Main(string[] args)
+        public static int Main(string[] args)
         {
             var tempFile =  Path.ChangeExtension(Path.GetTempFileName(),"msi");
             var msiName = "https://azurecliprod.blob.core.windows.net/msi/azure-cli-latest.msi";
-            Console.WriteLine($"Download Azure CLI from {msiName}");
-            Task t = WebUtils.DownloadAsync(msiName, tempFile);
-            await t;
-            Console.WriteLine($"Running Azure CLI installer at {tempFile}");
-            var p = Process.Start("msiexec.exe", $"/package \"{tempFile}\"");
-            p.WaitForExit();
+
+            Spinner.Start($"Download Azure CLI from {msiName}", async () =>
+            {
+                Task t = WebUtils.DownloadAsync(msiName, tempFile);
+                t.Wait();
+                await t;
+            });
+            
+            Spinner.Start($"Running Azure CLI installer at {tempFile}", spinner =>
+            {
+                var p = Process.Start("msiexec.exe", $"/package \"{tempFile}\"");
+                p.WaitForExit();
+            });
+            
             Console.WriteLine("Close and reopen this command prompt and run \"az login\" to setup the Azure Command Line");
             return 0;
         }

@@ -22,15 +22,6 @@ namespace get_azure
         var tempFile = Path.ChangeExtension(Path.GetTempFileName(), "msi");
         var msiName = "https://azurecliprod.blob.core.windows.net/msi/azure-cli-latest.msi";
 
-        Spinner.Start("Checking for Python depency", spinner =>
-        {
-          if (!DependencyChecker.Python())
-          {
-            spinner.Fail("Python required to run azure cli");
-            return;
-          }
-        });
-
         Spinner.Start($"Download Azure CLI from {msiName}", async () =>
         {
           Task t = WebUtils.DownloadAsync(msiName, tempFile);
@@ -167,19 +158,6 @@ namespace get_azure
     {
       var result = ShellHelper.Bash("command -v brew");
       return result != string.Empty;
-    }
-
-    public static bool Python()
-    {
-      // checking for windows only
-      string keyName = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
-      string valueName = "Python.exe";
-      if (Registry.GetValue(keyName, valueName, null) == null)
-      {
-        return false;
-      }
-
-      return true;
     }
   }
 }

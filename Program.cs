@@ -41,6 +41,7 @@ namespace get_azure
       {
         Spinner.Start("Running Azure CLI installer via homebrew", spinner =>
         {
+          // this will almost never fail, ruby is on macOS by default.
           spinner.Info("Checking for dependency of ruby");
           if (!DependencyChecker.Ruby())
           {
@@ -52,6 +53,8 @@ namespace get_azure
 
         Spinner.Start("Checking for dependency of homebrew", spinner =>
         {
+          // we can install homebrew auto
+          // ShellHelper("/usr/bin/ruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"");
           if (!DependencyChecker.Homebrew())
           {
             spinner.Fail("homebrew required to install azure cli");

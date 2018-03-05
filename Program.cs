@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using Kurukuru;
 
 namespace get_azure
@@ -14,6 +15,7 @@ namespace get_azure
   {
     public static int Main(string[] args)
     {
+      var installed = false;
 
       if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
       {
@@ -31,6 +33,7 @@ namespace get_azure
         {
           var p = Process.Start("msiexec.exe", $"/package \"{tempFile}\"");
           p.WaitForExit();
+          installed = true;
         });
       }
 
@@ -38,7 +41,32 @@ namespace get_azure
       {
         Spinner.Start("Running Azure CLI installer via homebrew", spinner =>
         {
-            ShellHelper.Bash("brew update && brew install azure-cli");
+          // this will almost never fail, ruby is on macOS by default.
+          spinner.Info("Checking for dependency of ruby");
+          if (!DependencyChecker.Ruby())
+          {
+            spinner.Fail("ruby required to install azure cli");
+            return;
+          }
+          spinner.Succeed();
+        });
+
+        Spinner.Start("Checking for dependency of homebrew", spinner =>
+        {
+          // we can install homebrew auto
+          // ShellHelper("/usr/bin/ruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"");
+          if (!DependencyChecker.Homebrew())
+          {
+            spinner.Fail("homebrew required to install azure cli");
+            return;
+          }
+          spinner.Succeed();
+        });
+
+        Spinner.Start("Installing azure cli using homebrew", spinner =>
+        {
+          ShellHelper.Bash("brew update && brew install azure-cli");
+          installed = true;
         });
       }
 
@@ -47,7 +75,11 @@ namespace get_azure
 
       }
 
-      Console.WriteLine("Close and reopen this command prompt and run \"az login\" to setup the Azure Command Line");
+      if (installed)
+      {
+        Console.WriteLine("Close and reopen this command prompt and run \"az login\" to setup the Azure Command Line");
+      }
+
       return 0;
     }
   }
@@ -115,6 +147,20 @@ namespace get_azure
       string result = process.StandardOutput.ReadToEnd();
       process.WaitForExit();
       return result;
+    }
+  }
+
+  public static class DependencyChecker
+  {
+    public static bool Ruby()
+    {
+      var result = ShellHelper.Bash("command -v ruby");
+      return result != string.Empty;
+    }
+    public static bool Homebrew()
+    {
+      var result = ShellHelper.Bash("command -v brew");
+      return result != string.Empty;
     }
   }
 }
